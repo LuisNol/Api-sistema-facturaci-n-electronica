@@ -2,37 +2,34 @@
 
 namespace App\Http\Controllers\Role;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
+use App\Http\Controllers\Controller;
 
 class RoleController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Resquest $request)
+    public function index(Request $request)
     {
-        $search = $request->get('search','');
-        $roles = Role::where('name','like', '%' . $search . '%')->ordeerBy('id','desc')->paginate(10);
-        
+        // list?search=admin
+        $search = $request->get("search");
+
+        $roles = Role::where("name","like","%".$search."%")->orderBy("id","desc")->paginate(25);
+
         return response()->json([
-            "roles"=>$roles->map(function($role){
+            "total" => $roles->total(),
+            "pagination" => 25,
+            "roles" => $roles->map(function($role) {
                 return [
-                    "id"=>$role->id,
-                    "name"=>$role->name,
-                    //"permissions"=>$role->permissions,
-                    "permissions"=>$role->permissions->map(function($permission){
-                        return [
-                            "id"=>$permission->id,
-                            "name"=>$permission->name,
-                        ];
-                    }),
-                    "created_at"=>$role->created_at->format('Y-m-d H:i:s A'),
+                    "id" => $role->id,
+                    "name" => $role->name,
+                    "permissions" => $role->permissions->pluck("name"),
+                    "created_at" => $role->created_at->format("Y-m-d h:i A"),
                 ];
             }),
-           
-        ]
-    
+        ]);
     }
 
     /**
@@ -40,36 +37,36 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-
-        $exitenRole = Role::where('name',$request->name)->first();
-        if($exitenRole){
+        $exist_role = Role::where("name",$request->name)->first();
+        if($exist_role){
             return response()->json([
-                "code"=>409,
-                "message"=>"Ya existe un rol con ese nombre"
+                "code" => 405,
+                "message" => "El nombre de este rol ya existe"  
             ]);
         }
 
+        $role = Role::create([
+           "name" => $request->name,
+           "guard_name" => "api"
+        ]);
 
-       $role = Role::create([
-        'name'=> $request->name,
-        'guard_name'=>'api',
-       ]);
+        // LISTA DE PERMISOS ["register_role","register_user","register_categorie"]
 
-       //LISTA DE PERMISOS
-       $permissions = $request->permissions; //ARRAY DE IDS DE PERMISOS
-       foreach($permissions as $key => $permission){
-        $role->givaPermissionTo($permission);
-       }
+        $permissions = $request->permissions;
+        foreach ($permissions as $key => $permission) {
+            $role->givePermissionTo($permission);
+        }
 
-         return response()->json([
-          "message"=>"Rol creado correctamente",
-          "role"=>[
-                "id"=>$role->id,
-                "name"=>$role->name,
-                "permissions"=>$role->permissions,
-                "created_at"=>$role->created_at->format('Y-m-d H:i:s A'),
-          ]
-         ],201);
+        return response()->json([
+            "role" => [
+                "id" => $role->id,
+                "name" => $role->name,
+                "permissions" => $role->permissions->pluck("name"),
+                "created_at" => $role->created_at->format("Y-m-d h:i A"),
+            ],
+            "code" => 200,
+            "message" => "El rol se ha registrado correctamente"  
+        ]);
     }
 
     /**
@@ -85,34 +82,36 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $exitenRole = Role:: where("id","!=",$id)  where('name',$request->name)->first();
-        if($exitenRole){
+        // Admin sede
+        // Asesor -> Admin sede
+        // Almacen
+        $exist_role = Role::where("id","<>",$id)->where("name",$request->name)->first();
+        if($exist_role){
             return response()->json([
-                "code"=>409,
-                "message"=>"Ya existe un rol con ese nombre"
+                "code" => 405,
+                "message" => "El nombre de este rol ya existe"  
             ]);
         }
 
-       $role = Role::findOrFil($id);
-       update([
-        'name'=> $request->name,
-       ]);
+        $role = Role::findOrFail($id);
+        
+        $role->update([
+           "name" => $request->name,
+        ]);
 
-       //LISTA DE PERMISOS
-       $permissions = $request->permissions; //ARRAY DE IDS DE PERMISOS
-       $role->syncPermissions($permissions);
-
-       
-
-         return response()->json([
-          "message"=>"Rol actualizado correctamente",
-          "role"=>[
-                "id"=>$role->id,
-                "name"=>$role->name,
-                "permissions"=>$role->permissions,
-                "created_at"=>$role->created_at->format('Y-m-d H:i:s A'),
-          ]
-         ],201);
+        // LISTA DE PERMISOS ["register_role","register_user","register_categorie"]
+        $permissions = $request->permissions;
+        $role->syncPermissions($permissions);
+        return response()->json([
+            "role" => [
+                "id" => $role->id,
+                "name" => $role->name,
+                "permissions" => $role->permissions->pluck("name"),
+                "created_at" => $role->created_at->format("Y-m-d h:i A"),
+            ],
+            "code" => 200,
+            "message" => "El rol se ha editado correctamente"  
+        ]);
     }
 
     /**
@@ -120,11 +119,11 @@ class RoleController extends Controller
      */
     public function destroy(string $id)
     {
-        $role = Role::findOrFil($id);
+        $role = Role::findOrFail($id);
         $role->delete();
 
         return response()->json([
-            "message"=>"Rol eliminado correctamente"
+            "message" => "El rol se elimino correctamente"
         ]);
     }
 }

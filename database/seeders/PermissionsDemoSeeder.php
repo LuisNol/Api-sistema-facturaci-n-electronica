@@ -12,7 +12,7 @@ class PermissionsDemoSeeder extends Seeder
     /**
      * Create the initial roles and permissions.
      */
-      public function run(): void
+    public function run(): void
     {
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
@@ -60,8 +60,8 @@ class PermissionsDemoSeeder extends Seeder
         // gets all permissions via Gate::before rule; see AuthServiceProvider
 
         $user = \App\Models\User::factory()->create([
-            'name' => 'Nolberto Luis Sumaran Pimentel',
-            'email' => 'nolberto.sumaran@gmail.com',
+            'name' => 'Jose Jaico',
+            'email' => 'laravest@gmail.com',
             'password' => bcrypt('12345678')
         ]);
         $user->assignRole($role3);

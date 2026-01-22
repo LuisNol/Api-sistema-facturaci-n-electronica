@@ -1,0 +1,565 @@
+<?php
+
+namespace App\Http\Controllers\Greenter;
+
+use DateTime;
+use Exception;
+use Greenter\See;
+use Greenter\Model\Sale\Note;
+use Greenter\Model\Sale\Cuota;
+use Greenter\Model\Sale\Charge;
+use Greenter\Model\Sale\Legend;
+use Greenter\Model\Sale\Invoice;
+use Greenter\Model\Client\Client;
+use Greenter\Model\Company\Address;
+use Greenter\Model\Company\Company;
+use Greenter\Model\Despatch\Driver;
+use Greenter\Model\Sale\Detraction;
+use Greenter\Model\Sale\Prepayment;
+use Greenter\Model\Sale\SaleDetail;
+use Greenter\Model\Despatch\Vehicle;
+use Greenter\Model\Despatch\Despatch;
+use Greenter\Model\Despatch\Shipment;
+use Greenter\Model\Despatch\Direction;
+use Greenter\Model\Sale\SalePerception;
+use Illuminate\Support\Facades\Storage;
+use Greenter\Ws\Services\SunatEndpoints;
+use Greenter\Model\Despatch\Transportist;
+use Greenter\Model\Despatch\AdditionalDoc;
+use Greenter\Model\Despatch\DespatchDetail;
+use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
+use Greenter\Model\Sale\FormaPagos\FormaPagoCredito;
+
+class GreenterService {
+
+
+    public function getSee() {
+        $see = new See();
+        $see->setCertificate(Storage::get('certificate-demo.pem'));
+        $see->setService(env("APP_ENV") == "local" ? SunatEndpoints::FE_BETA : SunatEndpoints::FE_PRODUCCION);
+        $see->setClaveSOL(env("RUC"), env("USER_SOL"), env("USER_PASS"));
+        return $see;
+    }
+
+    public function getCompany($company) {
+        return (new Company())
+            ->setRuc($company->n_document)
+            ->setRazonSocial($company->razon_social)
+            ->setNombreComercial($company->razon_social_comercial)
+            ->setAddress($this->getAddress($company));
+    }
+
+    public function getAddress($company) {
+        // Emisor
+        return (new Address())
+            ->setUbigueo($company->ubigeo_distrito)
+            ->setDepartamento($company->region)
+            ->setProvincia($company->provincia)
+            ->setDistrito($company->distrito)
+            ->setUrbanizacion($company->urbanizacion)
+            ->setDireccion($company->address)
+            ->setCodLocal($company->cod_local); // Codigo de establecimiento asignado por SUNAT, 0000 por defecto.
+    }
+
+    public function getClient($sale){
+        $cod_document = 1;$client = $sale->client;
+        switch ($client->type_document) {
+            case 'RUC':
+                $cod_document = 6;
+                break;
+            case 'CARNET DE EXTRANJERIA':
+                $cod_document = 4;
+                break;
+            case 'PASAPORTE':
+                $cod_document = 7;
+                break;
+        }
+        if($sale->is_exportacion == 1){
+            return (new Client())
+                ->setTipoDoc(0)
+                ->setNumDoc('-')
+                ->setRznSocial($client->full_name);
+        }else{
+            return (new Client())
+                ->setTipoDoc($cod_document)
+                ->setNumDoc($client->n_document)
+                ->setRznSocial($client->full_name);
+        }
+    }
+
+    public function getInvoice($data,$company,$sale) {
+        
+        $invoice = (new Invoice())
+            ->setUblVersion('2.1')
+            ->setTipoOperacion($data["tipo_operacion"]) // Venta - Catalog. 51
+            ->setTipoDoc($data['tipo_doc']) // Factura - Catalog. 01 
+            ->setSerie($data['serie'])
+            ->setCorrelativo($data['correlativo'])
+            ->setCompany($this->getCompany($company))
+            ->setClient($this->getClient($sale))
+            ->setTipoMoneda($data['tipo_moneda'])// Sol - Catalog. 02
+            ->setFechaEmision(new DateTime());
+            
+            if($sale->type_payment == 2 && $sale->payments->count() > 1){
+                $invoice->setFormaPago(new FormaPagoCredito($sale->payments->sum("amount")));
+                $cuotas = [];
+                foreach ($sale->payments as $payment) {
+                    array_push($cuotas,(new Cuota())
+                    ->setMonto($payment->amount)
+                    ->setFechaPago(new DateTime($payment->date_payment)));
+                }
+                $invoice->setCuotas($cuotas);
+            }else{
+                $invoice->setFormaPago(new FormaPagoContado()); // FormaPago: Contado
+            }
+
+            $sales_anticipos = $sale->sales_anticipos ? json_decode($sale->sales_anticipos,true) : [];
+            if(sizeof($sales_anticipos) > 0 && $sale->amount_anticipo){//$sale->n_comprobante_anticipo
+                $set_descuentos = [];
+                $set_anticipos = [];
+                foreach ($sales_anticipos as $key => $sales_anticip) {
+                    array_push($set_descuentos,(new Charge())
+                        ->setCodTipo('04')
+                        ->setFactor(1)
+                        ->setMonto($sales_anticip["subtotal"]) // anticipo
+                        ->setMontoBase($sales_anticip["subtotal"]));
+
+                    array_push($set_anticipos,(new Prepayment())
+                        ->setTipoDocRel('02') // catalog. 12
+                        ->setNroDocRel($sales_anticip["n_operacion"])
+                        ->setTotal($sales_anticip["subtotal"]));
+
+                }
+                $invoice->setDescuentos($set_descuentos)
+                        ->setAnticipos($set_anticipos)
+                        ->setTotalAnticipos($sale->amount_anticipo);
+                // $invoice->setDescuentos([(
+                //     new Charge())
+                //     ->setCodTipo('04')
+                //     ->setFactor(1)
+                //     ->setMonto($sale->amount_anticipo) // anticipo
+                //     ->setMontoBase($sale->amount_anticipo)
+                // ])->setAnticipos([
+                //     (new Prepayment())
+                //         ->setTipoDocRel('02') // catalog. 12
+                //         ->setNroDocRel($sale->n_comprobante_anticipo)
+                //         ->setTotal($sale->amount_anticipo)
+                // ]) ->setTotalAnticipos($sale->amount_anticipo);
+            }
+
+            if($sale->retencion_igv > 0){
+                if($sale->retencion_igv == 1){//RETENCION
+                    $invoice->setDescuentos([
+                        (new Charge())
+                            ->setCodTipo('62') // Catalog. 53
+                            ->setMontoBase($data['mto_imp_venta'])
+                            ->setFactor(0.03) // 3%
+                            ->setMonto(round($data['mto_imp_venta']*0.03,2))
+                    ]);
+                }
+                if($sale->retencion_igv == 2){//DETRACCIÓN
+                    $invoice->setDetraccion(
+                    // MONEDA SIEMPRE EN SOLES
+                        (new Detraction())
+                            // Carnes y despojos comestibles
+                            ->setCodBienDetraccion('014') // catalog. 54
+                            // Deposito en cuenta
+                            ->setCodMedioPago('001') // catalog. 59
+                            ->setCtaBanco(env("CTA_BANCO"))
+                            ->setPercent(4.00)
+                            ->setMount(round($data['mto_imp_venta']*0.04,2))
+                    );
+                }
+                if($sale->retencion_igv == 3){//PERCEPCION
+                    $invoice->setPerception((new SalePerception())
+                    ->setCodReg('51')
+                    ->setPorcentaje(0.04)
+                    ->setMtoBase($data['mto_imp_venta'])
+                    ->setMto(round($data['mto_imp_venta']*0.04,2))
+                    ->setMtoTotal(round( (($data['mto_imp_venta']*0.04) + $data['mto_imp_venta']),2)));
+                }
+            }
+
+            if($data['isc'] > 0) {
+                $invoice->setMtoBaseIsc($data['mto_oper_gravadas']) // Sumatoria MtoBaseISC detalles
+                ->setMtoISC($data['isc']);
+            }
+
+            if($sale->discount_global > 0){
+                $invoice->setDescuentos([
+                    (new Charge())
+                        ->setCodTipo('02') // Catalog. 53
+                        ->setMontoBase($sale->discount_global)
+                        ->setFactor(1)
+                        ->setMonto($sale->discount_global)
+                ]);
+            }
+
+            //Mto Operaciones
+            if($sale->is_exportacion == 1){
+                $invoice->setMtoOperExportacion($data['mto_oper_exportacion'] ?? null);
+            }else{
+                $invoice->setMtoOperGravadas($data['mto_oper_gravadas'] ?? null)
+                    ->setMtoOperExoneradas($data['mto_oper_exoneradas'] ?? null)
+                    ->setMtoOperInafectas($data['mto_oper_inafectas'] ?? null)
+                    ->setMtoOperGratuitas($data['mto_oper_gratuitas'] ?? null);
+            }
+
+            $invoice->setMtoBaseIvap($data['mto_base_ivap'] ?? null) // Base IVAP
+            ->setMtoIvap($data['mto_ivap'] ?? null) // Suma IVAP
+
+            //Impuestos
+            ->setMtoIGV($data['mto_igv'])
+            ->setMtoIGVGratuitas($data['mto_igv_gratuitas'])
+            ->setIcbper($data['icbper'])
+            ->setTotalImpuestos($data['total_impuestos'])
+
+            //Totales
+            ->setValorVenta($data['valor_venta'])
+            ->setSubTotal($data['sub_total'])
+            ->setRedondeo($data['redondeo'])
+            ->setMtoImpVenta($data['mto_imp_venta'])
+
+
+            ->setDetails($this->getDetails($sale->sale_details))
+            ->setLegends($this->getLegends($data["legends"]));
+
+        return $invoice;
+    }
+
+    public function getDetails($sale_details) {
+        $greenter_sale_details = [];
+        foreach ($sale_details as $sale_detail) {
+            $mto_valor_unitario = 0;
+            if($sale_detail->electronic_note){
+                $mto_valor_unitario = round($sale_detail->subtotal/$sale_detail->quantity,2);
+            }else{
+                $mto_valor_unitario = $sale_detail->price_base;
+            }
+            $mto_valor_venta = $sale_detail->subtotal;    
+            $mto_base_igv =   $sale_detail->subtotal + $sale_detail->isc;
+            $porcentaje_igv = 18;
+
+            if(!in_array($sale_detail->tip_afe_igv,[10,11])){
+                $porcentaje_igv = 0;
+            }
+            if($sale_detail->tip_afe_igv == 11){
+                $mto_valor_unitario = 0;
+            }
+            if($sale_detail->tip_afe_igv == 17){
+                $porcentaje_igv = 4;
+            }
+
+            $igv = $sale_detail->igv;
+            $total_impuesto = $igv + $sale_detail->icbper + $sale_detail->isc;
+            $mto_precio_unitario = $sale_detail->price_final;
+
+            $detail = (new SaleDetail())
+                ->setCodProducto('P001')
+                ->setUnidad($sale_detail->unidad_medida) // Unidad - Catalog. 03
+                ->setDescripcion($sale_detail->product->title)
+                ->setCantidad($sale_detail->quantity)
+                ->setMtoValorUnitario($mto_valor_unitario)
+                ->setMtoValorVenta($mto_valor_venta)
+                ->setMtoBaseIgv($mto_base_igv)
+                ->setPorcentajeIgv($porcentaje_igv) // 18%
+                ->setIgv($igv)
+                ->setTotalImpuestos($total_impuesto) // Suma de impuestos en el detalle
+                ->setTipAfeIgv($sale_detail->tip_afe_igv) // Gravado Op. Onerosa - Catalog. 07
+                ->setMtoPrecioUnitario($mto_precio_unitario);
+
+            if($sale_detail->tip_afe_igv == 11){
+                $detail->setMtoValorGratuito($sale_detail->price_base);
+            }
+
+            if($sale_detail->isc > 0){
+                $detail->setMtoBaseIsc($mto_valor_venta)
+                    ->setTipSisIsc('01') // Catalog 08: Sistema al Valor
+                    ->setPorcentajeIsc($sale_detail->percentage_isc) // 17%
+                    ->setIsc($sale_detail->isc); // 200 * 0.17 (17%)
+            }
+
+            if($sale_detail->discount > 0){
+                $monto_base = round($sale_detail->quantity * $sale_detail->price_base,2);
+                // error_log($monto_base);
+                $detail->setDescuentos([
+                    (new Charge())
+                        ->setCodTipo('00') // Catalog. 53 (00: Descuento que afecta la Base Imponible)
+                        ->setMontoBase($monto_base) // cantidad * valor unitario
+                        ->setFactor(round($sale_detail->discount/$monto_base,6)) // 20% descuento
+                        ->setMonto($sale_detail->discount)
+                ]);
+            }
+            if($sale_detail->sale && $sale_detail->sale->is_exportacion == 1){
+                $detail->setCodProdSunat($sale_detail->product->sku);
+            }
+
+            array_push($greenter_sale_details,$detail);
+        }
+        return $greenter_sale_details;
+    }
+
+    public function getLegends($legends)
+    {
+        $green_legends = [];
+
+        foreach ($legends as $legend) {
+            $green_legends[] = (new Legend())
+                ->setCode($legend['code'] ?? null) // Monto en letras - Catalog. 52
+                ->setValue($legend['value'] ?? null);
+        }
+
+        return $green_legends;
+    }
+
+    public function sunatResponse($result) {
+
+        $response = [];
+
+        $response["success"] = $result->isSuccess();
+
+        // Verificación que la conexión con la sunat fue exitosa
+        if(!$response["success"]){
+            $response["error"] = [
+                "code" => $result->getError()->getCode(),
+                "message" =>  $result->getError()->getMessage(),
+            ];
+            return $response;
+        }
+
+        // Generar un nombre único para el archivo
+        $file_name = "cdrs/".uniqid() . '.' . 'zip';
+        Storage::disk('public')->put($file_name, $result->getCdrZip());
+        // Obtener la ruta pública del archivo
+        $public_path = Storage::url($file_name);
+        $response['cdrZip'] = $public_path;//base64_encode($result->getCdrZip());
+
+        $cdr = $result->getCdrResponse();
+
+        $response['cdrResponse'] = [
+            'code' => (int)$cdr->getCode(),
+            'description' => $cdr->getDescription(),
+            'notes' => $cdr->getNotes()
+        ];
+
+        return $response;
+    }
+
+    public function getNota($data,$company,$nota_electronic) {
+        $invoice = (new Note())
+                    ->setUblVersion('2.1')
+                    ->setTipoDoc($data['tipo_doc']) // 07: Nota de Crédito / 08: Nota de Débito - Catalog. 01 
+                    ->setSerie($data['serie'])
+                    ->setCorrelativo($data['correlativo'])
+                    ->setFechaEmision(new DateTime()) // Zona horaria: Lima
+
+                    ->setTipDocAfectado($data['tipo_doc_afect']) // Tipo Doc: Factura
+                    ->setNumDocfectado($data['num_doc_afect']) // Factura: Serie-Correlativo
+                    ->setCodMotivo($data['cod_motivo']) // Catalogo. 09
+                    ->setDesMotivo($data['des_motivo'])
+
+                    ->setTipoMoneda($data['tipo_moneda']) // Sol - Catalog. 02
+                    ->setCompany($this->getCompany($company))
+                    ->setClient($this->getClient($nota_electronic));
+
+        if($data['isc'] > 0) {
+            $invoice->setMtoBaseIsc($data['mto_oper_gravadas']) // Sumatoria MtoBaseISC detalles
+            ->setMtoISC($data['isc']);
+        }
+
+        if($nota_electronic->retencion_igv > 0){
+            if($nota_electronic->retencion_igv == 3){//PERCEPCION
+                $invoice->setPerception((new SalePerception())
+                ->setCodReg('51')
+                ->setPorcentaje(0.04)
+                ->setMtoBase($data['mto_imp_venta'])
+                ->setMto(round($data['mto_imp_venta']*0.04,2))
+                ->setMtoTotal(round( (($data['mto_imp_venta']*0.04) + $data['mto_imp_venta']),2)));
+            }
+        }
+
+        //Mto Operaciones
+        if($nota_electronic->is_exportacion == 1){
+            $invoice->setMtoOperExportacion($data['mto_oper_exportacion'] ?? null);
+        }else{
+            $invoice->setMtoOperGravadas($data['mto_oper_gravadas'] ?? null)
+                ->setMtoOperExoneradas($data['mto_oper_exoneradas'] ?? null)
+                ->setMtoOperInafectas($data['mto_oper_inafectas'] ?? null)
+                ->setMtoOperGratuitas($data['mto_oper_gratuitas'] ?? null);
+        }
+        
+
+        $invoice->setMtoBaseIvap($data['mto_base_ivap'] ?? null) // Base IVAP
+        ->setMtoIvap($data['mto_ivap'] ?? null) // Suma IVAP
+
+        //Impuestos
+        ->setMtoIGV($data['mto_igv'])
+        ->setMtoIGVGratuitas($data['mto_igv_gratuitas'])
+        ->setIcbper($data['icbper'])
+        ->setTotalImpuestos($data['total_impuestos'])
+        
+        //Totales
+        ->setValorVenta($data['valor_venta'])
+        ->setSubTotal($data['sub_total'])
+        ->setRedondeo($data['redondeo'])
+        ->setMtoImpVenta($data['mto_imp_venta'])
+
+        //Productos
+        ->setDetails($this->getDetails($nota_electronic->details))
+
+        //Leyendas
+        ->setLegends($this->getLegends($data['legends']));
+
+        return $invoice;
+    }
+
+
+    public function getSeeApi() {
+        $api = new \Greenter\Api(env("APP_ENV") == "production" ?
+            ['auth' => 'https://api-seguridad.sunat.gob.pe/v1',
+            'cpe' => 'https://api-cpe.sunat.gob.pe/v1',]
+            :
+            ['auth' => 'https://gre-test.nubefact.com/v1',
+            'cpe' => 'https://gre-test.nubefact.com/v1',]
+        );
+
+        $certificate = Storage::get('certificate-demo.pem');
+        if (!$certificate) {
+            throw new Exception('No se pudo cargar el certificado');
+        }
+
+        return $api->setBuilderOptions([
+                'strict_variables' => true,
+                'optimizations' => 0,
+                'debug' => true,
+                'cache' => false,
+            ])
+            ->setApiCredentials(
+                env("APP_ENV") == "production" ? env("CLIENT_ID") : 'test-85e5b0ae-255c-4891-a595-0b98c65c9854', 
+                env("APP_ENV") == "production" ? env("CLIENT_SECRET") : 'test-Hty/M6QshYvPgItX2P0+Kw=='
+            )
+            ->setClaveSOL(
+                env("RUC"), 
+                env("USER_SOL"), 
+                env("USER_PASS")
+            )
+            ->setCertificate($certificate);
+        
+    }
+
+    public function getGuiaEnvio($guia_remision,$company)
+    {
+        if($guia_remision->transporte_datos){//TRANSPORTE ES PUBLICO
+            $transporte_datos = json_decode($guia_remision->transporte_datos,true);
+            $transp = new Transportist();
+            $transp->setTipoDoc('6')
+                ->setNumDoc($transporte_datos["n_document_ruc"])
+                ->setRznSocial($transporte_datos["razon_social_transportista"])
+                ->setNroMtc($transporte_datos["nro_mtc"]);
+        }
+        if($guia_remision->conductor_datos){//TRANSPORTE ES PRIVADO
+            $conductor_datos = json_decode($guia_remision->conductor_datos,true);
+            $vehiculoPrincipal = (new Vehicle())
+                                ->setPlaca($conductor_datos["placa_vehiculo"]);
+    
+            $chofer = (new Driver())
+                ->setTipo('Principal')
+                ->setTipoDoc($conductor_datos["type_document"])
+                ->setNroDoc($conductor_datos["n_document"])
+                ->setLicencia($conductor_datos["n_licencia"])
+                ->setNombres($conductor_datos["full_name_conductor"])
+                ->setApellidos($conductor_datos["full_name_conductor"]);
+        }
+
+        $punto_partida = json_decode($guia_remision->punto_partida,true);
+        $punto_llegada = json_decode($guia_remision->punto_llegada,true);
+
+        $shipment = (new Shipment())
+                    ->setCodTraslado($guia_remision->motivo_translado) // Cat.20 - Venta
+                    ->setModTraslado($guia_remision->type_transport) // Cat.18 - Transp. Publico
+                    ->setFecTraslado(new DateTime())
+                    ->setDesTraslado($guia_remision->description)
+                    ->setPesoTotal($guia_remision->total);
+                    // 
+                    if($guia_remision->conductor_datos){
+                        $shipment->setVehiculo($vehiculoPrincipal)
+                        ->setChoferes([$chofer]);
+                    }
+                    // 
+                    if($guia_remision->transporte_datos){
+                        $shipment->setTransportista($transp);
+                    }
+                    if($guia_remision->motivo_translado == '08' || $guia_remision->motivo_translado == '09'){
+                        $shipment->setIndicadores(['SUNAT_Envio_IndicadorTrasladoTotalDAMoDS'])
+                                    ->setNumBultos($guia_remision->quantity_total); // Solo válido para importaciones
+                        // setNumContenedor
+                        // setContenedores Contenedores (precinto)
+                        // En caso se recoja de puertos o aeropuesto estan
+                        // setCodPuerto
+                        // setPuerto
+                        // setAeropuerto
+                    }
+                    $shipment->setUndPesoTotal('KGM')
+                    ->setPartida(
+                        (new Direction($punto_partida["ubigeo_distrito"], $punto_partida["address"]))
+                        ->setCodLocal("0000")
+                        ->setRuc(in_array($guia_remision->motivo_translado,['04']) ?  $company->n_document : $guia_remision->client->n_document))//in_array($guia_remision->motivo_translado,['04']) ? '20161515648'  :
+                    ->setLlegada((new Direction($punto_llegada["ubigeo_distrito"], $punto_llegada["address"]))
+                        ->setCodLocal(in_array($guia_remision->motivo_translado,['18']) ? null :  "0001")
+                        ->setRuc(in_array($guia_remision->motivo_translado,['04','02']) ?  $company->n_document : $guia_remision->client->n_document)
+                    );
+        return $shipment;
+    }
+
+    public function getGuiaDetails($guia_details)
+    {
+        $details = [];
+
+        foreach ($guia_details as $guia_detail) {
+            $despatch_detail = new DespatchDetail();
+            $despatch_detail->setCantidad($guia_detail->quantity)
+                ->setUnidad($guia_detail->unidad_medida)
+                ->setDescripcion($guia_detail->product->title)
+                ->setCodigo('P001');
+            array_push($details,$despatch_detail);
+        }
+        return $details;
+    }
+    
+    public function getGRECompany($company): \Greenter\Model\Company\Company
+    {
+        return (new \Greenter\Model\Company\Company())
+            ->setRuc($company->n_document)
+            ->setRazonSocial($company->razon_social);
+            // ->setRuc('20161515648')
+            // ->setRazonSocial('GREENTER S.A.C.');
+    }
+
+    public function getGuia($data,$company,$guia_remision) {
+
+        $despatch = (new Despatch())
+                        ->setVersion('2022')
+                        ->setTipoDoc($data['tipo_doc']) // Factura - Catalog. 01 
+                        ->setSerie($data['serie'])
+                        ->setCorrelativo($data['correlativo'])
+                        ->setFechaEmision(new DateTime())
+                        ->setCompany($this->getGRECompany($company))//$this->getCompany($company))
+                        ->setDestinatario((new Client())
+                            ->setTipoDoc('6')
+                            ->setNumDoc( in_array($guia_remision->motivo_translado,['04','02']) ? $company->n_document  : $guia_remision->client->n_document)
+                            ->setRznSocial($guia_remision->client->full_name))
+                        ->setEnvio($this->getGuiaEnvio($guia_remision,$company))
+                        //Productos
+                        ->setDetails($this->getGuiaDetails($guia_remision->details));
+
+        if($guia_remision->motivo_translado == '08' || $guia_remision->motivo_translado == '09'){
+            $relDoc = (new AdditionalDoc())
+                        ->setTipo('50')
+                        ->setTipoDesc('Numero de declaracion aduanera (DAM)')
+                        ->setNro($guia_remision->num_dam);//118-2024-10-4 importacion - 082-2024-40-12345 exportacion
+            $despatch->setAddDocs([$relDoc]);
+        }
+        return $despatch;
+                        
+    }
+}

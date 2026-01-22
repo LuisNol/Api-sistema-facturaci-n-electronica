@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
-//use Validator;
+// use Validator;
   
   
 class AuthController extends Controller
@@ -94,13 +94,22 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $permissions = auth("api")->user()->getAllPermissions()->map(function($permission) {
+            return $permission->name;
+        });
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth("api")->factory()->getTTL() * 60,
-            "user"=> [
-                "full_name" => auth("api")->user()->name ,
-                "email"=> auth("api")->user()->email,
+            "user" => [
+                "full_name" => auth("api")->user()->name,
+                "email" => auth("api")->user()->email,
+                "avatar" => env("APP_URL")."storage/".auth("api")->user()->avatar,
+                "role" => [
+                    "id" => auth("api")->user()->role->id,
+                    "name" => auth("api")->user()->role->name,
+                ],
+                "permissions" => $permissions,
             ],
         ]);
     }
