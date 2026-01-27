@@ -42,7 +42,7 @@ Route::group([
     Route::resource("products",ProductController::class);
 
     Route::resource("clients",ClientController::class);
-
+  //hola
     Route::get("sales/search_sale/{comprobante}",[SaleController::class,"search_sale"]);
     Route::get("sales/config",[SaleController::class,"config"]);
     Route::post("sales/index",[SaleController::class,"index"]);
