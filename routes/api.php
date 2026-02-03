@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Sale\SaleController;
 use App\Http\Controllers\User\UserController;
+use App\Http\Controllers\Sale\SaleKpiController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Client\CompanyController;
 use App\Http\Controllers\Product\ProductController;
@@ -57,6 +58,15 @@ Route::group([
     Route::get("guia/config",[GuiaRemisionController::class,"config"]);
     Route::post("guia/index",[GuiaRemisionController::class,"index"]);
     Route::resource("guia",GuiaRemisionController::class);
+
+    Route::group(["prefix" => "kpi",'middleware' => ['permission:dashboard']],function(){
+        Route::post("report_general",[SaleKpiController::class,"report_general"]);
+        Route::post("sales_x_month_of_year",[SaleKpiController::class,"sales_x_month_of_year"]);
+        Route::post("sales_x_day_of_month",[SaleKpiController::class,"sales_x_day_of_month"]);
+        Route::post("categories_most_sales",[SaleKpiController::class,"categories_most_sales"]);
+        Route::post("product_most_sales",[SaleKpiController::class,"product_most_sales"]);
+        Route::post("client_most_sales",[SaleKpiController::class,"client_most_sales"]);
+    });
 });
 
 Route::get("electronic-note-pdf/{n_operacion}",[FacturacionElectronicaController::class,"pdf"]);
