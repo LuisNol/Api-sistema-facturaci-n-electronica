@@ -209,13 +209,13 @@ class SaleKpiController extends Controller
         $categories_most_sales = DB::table("sales")->where("sales.deleted_at",NULL)
                                     ->join("sale_details","sale_details.sale_id","=","sales.id")
                                     ->where("sale_details.deleted_at",NULL)
-                                    ->join("product_categories","sale_details.product_categorie_id","=","product_categories.id")
+                                    ->join("categories","sale_details.product_categorie_id","=","categories.id")
                                     ->where("sales.state_sale",1)
                                     ->whereYear("sales.created_at",$year)
                                     ->whereMonth("sales.created_at",$month)
                                     ->selectRaw("
                                         sale_details.product_categorie_id as categorie_id,
-                                        product_categories.name as categorie_name,
+                                        categories.title as categorie_name,
                                         ROUND(SUM(sale_details.subtotal),2) as total_sales,
                                         SUM(sale_details.quantity) as count_products
                                     ")
