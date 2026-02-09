@@ -5,7 +5,7 @@ Sigue estos pasos para poner en marcha la API en un entorno de desarrollo:
 1. Instalar dependencias:
 
 ```bash
-composer install
+## Inicio rápido (comandos Laravel)
 ```
 
 2. Copiar y configurar variables de entorno:
@@ -41,8 +41,6 @@ Nota: la cuenta de prueba (usar solo en desarrollo):
 - Usuario: `demo.sum@gmail.com`
 - Contraseña: `12345678`
 
-6. Iniciar servidor local:
-
 ```bash
 php artisan serve --host=127.0.0.1 --port=8000
 ```
@@ -61,9 +59,6 @@ He incluido referencias a las capturas en el README como placeholders. Para most
 
 - `docs/screenshots/dashboard.svg`
 - `docs/screenshots/product-list.svg`
-- `docs/screenshots/sale-list.svg`
-
-Ejemplo de uso en Markdown:
 
 ```markdown
 <p align="center">
@@ -89,16 +84,9 @@ Si quieres, puedo añadir las imágenes al repositorio por ti: súbelas al chat 
 
 ---
 
-# API Sistema de Ventas
 
 Descripción breve
 - Proyecto: API REST para el sistema de facturación y ventas.
 - Tecnología: Laravel (PHP) — backend para manejar clientes, productos, ventas, guías y notas electrónicas.
-
-**Requisitos**
 - PHP 8.1+ (o versión compatible)
 - Composer
-- MySQL / MariaDB (u otra BD soportada por Laravel)
-- Extensiones PHP habituales (OpenSSL, PDO, Mbstring, etc.)
-
-**Nota:** La sección de instalación y comandos está disponible en la parte superior (`Inicio rápido`).
