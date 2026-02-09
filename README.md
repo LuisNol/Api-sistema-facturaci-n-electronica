@@ -2,47 +2,13 @@
 
 # 🚀 API Sistema de Ventas
 
-### Sistema completo de facturación electrónica con Laravel
+### Sistema completo de ventas con facturación electrónica
 
-[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-[Demo en Vivo](#-demo-en-vivo) • [Características](#-características) • [Instalación](#-instalación-rápida) • [Capturas](#-capturas-de-pantalla)
-
-</div>
-
----
-
-## 📋 Tabla de Contenidos
-
-- [Demo en Vivo](#-demo-en-vivo)
-- [Características](#-características)
-- [Requisitos](#-requisitos)
-- [Instalación Rápida](#-instalación-rápida)
-- [Configuración](#-configuración)
-- [Capturas de Pantalla](#-capturas-de-pantalla)
-- [Contribuir](#-contribuir)
-- [Licencia](#-licencia)
-
----
-
-## 🌐 Demo en Vivo
-
-Prueba el sistema completo con las siguientes credenciales:
-
-<div align="center">
-
-| Componente | URL |
-|------------|-----|
-| 🔧 **Backend API** | [https://api-fe.avisonline.store](https://api-fe.avisonline.store) |
-| 💻 **Frontend Admin** | [https://admin-fe.avisonline.store](https://admin-fe.avisonline.store) |
-
-### Credenciales de Acceso
-```
-📧 Email:    demo.sum@gmail.com
-🔑 Contraseña: 12345678
-```
+[Características](#características) • [Instalación](#instalación) • [Demo en Vivo](#demo-en-vivo) • [Capturas](#capturas-de-pantalla)
 
 </div>
 
@@ -50,188 +16,144 @@ Prueba el sistema completo con las siguientes credenciales:
 
 ## ✨ Características
 
-<div align="center">
-
-| 📦 Gestión de Productos | 💰 Ventas y Facturación | 👥 Control de Usuarios |
-|:---:|:---:|:---:|
-| Inventario completo | Facturación electrónica | Roles y permisos |
-| Categorización | Reportes detallados | Multi-usuario |
-| Control de stock | Métodos de pago | Auditoría de acciones |
-
-</div>
-
-- ✅ **API RESTful** completa con Laravel
-- ✅ **Autenticación JWT** segura
-- ✅ **Sistema de permisos** granular
-- ✅ **Facturación electrónica** integrada
-- ✅ **Dashboard interactivo** con estadísticas en tiempo real
-- ✅ **Gestión de inventario** con alertas de stock
-- ✅ **Reportes y exportación** de datos
+- 📊 Dashboard completo con métricas en tiempo real
+- 🛍️ Gestión integral de productos e inventario
+- 💰 Sistema de ventas y facturación electrónica
+- 👥 Control de usuarios y permisos (RBAC)
+- 📈 Reportes y estadísticas detalladas
+- 🔐 Autenticación segura con Laravel Sanctum
+- 📱 API RESTful documentada
 
 ---
 
-## 🔧 Requisitos
+## 🚀 Inicio Rápido
 
-Antes de comenzar, asegúrate de tener instalado:
+### Requisitos Previos
 
-- **PHP** >= 8.2
-- **Composer** >= 2.0
-- **MySQL** >= 8.0 o **PostgreSQL** >= 13
-- **Node.js** >= 18.x (para el frontend)
-- **Git**
+- PHP >= 8.1
+- Composer
+- MySQL/PostgreSQL
+- Node.js y NPM
 
----
+### Instalación
 
-## 🚀 Instalación Rápida
+Sigue estos pasos para configurar el proyecto en tu entorno local:
 
-### Backend (API)
+#### 1️⃣ Instalar dependencias
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/api-sistema-ventas.git
-cd api-sistema-ventas
-
-# 2. Instalar dependencias
 composer install
+```
 
-# 3. Configurar variables de entorno
+#### 2️⃣ Configurar variables de entorno
+```bash
 cp .env.example .env
+```
 
-# 4. Generar clave de aplicación
+Edita el archivo `.env` con tus credenciales de base de datos.
+
+#### 3️⃣ Generar clave de aplicación
+```bash
 php artisan key:generate
-
-# 5. Crear enlace simbólico para almacenamiento
 php artisan storage:link
+```
 
-# 6. Ejecutar migraciones con datos de prueba
+#### 4️⃣ Ejecutar migraciones y seeders
+```bash
+# Desarrollo (con datos de prueba)
 php artisan migrate --seed
 
-# 7. Iniciar el servidor de desarrollo
+# Solo el seeder de permisos
+php artisan db:seed --class=PermissionsDemoSeeder
+```
+
+#### 5️⃣ Iniciar servidor de desarrollo
+```bash
 php artisan serve
 ```
 
-> 💡 **Nota:** Para producción, ejecuta solo el seeder de permisos:
-> ```bash
-> php artisan db:seed --class=PermissionsDemoSeeder
-> ```
-
-### Frontend (Opcional)
-
-Visita el repositorio del frontend para instrucciones de instalación:
-
-📁 [Frontend Sistema de Ventas](https://github.com/tu-usuario/frontend-sistema-ventas)
+La API estará disponible en `http://localhost:8000`
 
 ---
 
-## ⚙️ Configuración
+## 🌐 Demo en Vivo
 
-### Variables de Entorno Esenciales
+Prueba el sistema completo en nuestros servidores de demostración:
 
-Edita el archivo `.env` con tu configuración:
-```env
-# Base de datos
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=nombre_base_datos
-DB_USERNAME=usuario
-DB_PASSWORD=contraseña
+<div align="center">
 
-# JWT (si aplica)
-JWT_SECRET=tu_clave_secreta_jwt
+| Servicio | URL |
+|----------|-----|
+| 🔗 **Backend API** | [api-fe.avisonline.store](https://api-fe.avisonline.store/) |
+| 💻 **Frontend Admin** | [admin-fe.avisonline.store](https://admin-fe.avisonline.store/) |
 
-# Mail (opcional)
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailtrap.io
-MAIL_PORT=2525
+### 🔑 Credenciales de Acceso
+```
+Email: demo.sum@gmail.com
+Contraseña: 12345678
 ```
 
-### Configuración de Permisos (Linux/Mac)
-```bash
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
-```
+</div>
 
 ---
 
 ## 📸 Capturas de Pantalla
 
-<details>
-<summary>👉 Click para ver las capturas</summary>
-
-<br>
-
-### 📊 Dashboard Principal
+### Panel de Control
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="900" style="border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard del Sistema" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+  <br/>
+  <em>📊 Dashboard - Vista general del sistema con métricas en tiempo real</em>
 </p>
 
+<br/>
+
+### Gestión de Productos
+
 <p align="center">
-  <em>Vista general del sistema con métricas y estadísticas en tiempo real</em>
+  <img src="docs/screenshots/product-list.png" alt="Listado de Productos" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+  <br/>
+  <em>📦 Gestión de Productos - Control completo del inventario</em>
+</p>
+
+<br/>
+
+### Registro de Ventas
+
+<p align="center">
+  <img src="docs/screenshots/sale-list.png" alt="Listado de Ventas" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+  <br/>
+  <em>💳 Módulo de Ventas - Historial y facturación electrónica</em>
 </p>
 
 ---
 
-### 📦 Gestión de Productos
+## 📚 Documentación
 
-<p align="center">
-  <img src="docs/screenshots/product-list.png" alt="Listado de Productos" width="900" style="border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-</p>
+Para más información sobre cómo usar y extender este sistema, consulta:
 
-<p align="center">
-  <em>Administración completa del catálogo de productos con control de inventario</em>
-</p>
-
----
-
-### 💰 Control de Ventas
-
-<p align="center">
-  <img src="docs/screenshots/sale-list.png" alt="Listado de Ventas" width="900" style="border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-</p>
-
-<p align="center">
-  <em>Registro detallado de todas las transacciones y facturación</em>
-</p>
-
-</details>
+- [Documentación de la API](docs/API.md)
+- [Guía de Contribución](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
 
 ---
 
 ## 🤝 Contribuir
 
-Las contribuciones son bienvenidas y apreciadas. Para contribuir:
-
-1. 🍴 Fork el proyecto
-2. 🌿 Crea una rama para tu característica (`git checkout -b feature/AmazingFeature`)
-3. 💾 Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. 📤 Push a la rama (`git push origin feature/AmazingFeature`)
-5. 🔃 Abre un Pull Request
-
----
-
-## 📞 Soporte
-
-¿Necesitas ayuda? Contáctanos:
-
-- 📧 Email: soporte@ejemplo.com
-- 💬 Discord: [Únete a nuestra comunidad](https://discord.gg/ejemplo)
-- 📚 Documentación: [Wiki del proyecto](https://github.com/tu-usuario/api-sistema-ventas/wiki)
+Las contribuciones son bienvenidas. Por favor, lee las [guías de contribución](CONTRIBUTING.md) antes de enviar un Pull Request.
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ---
 
 <div align="center">
 
-### ⭐ Si este proyecto te ha sido útil, considera darle una estrella
-
 **Desarrollado con ❤️ usando Laravel**
 
-[⬆️ Volver arriba](#-api-sistema-de-ventas)
+[⬆ Volver arriba](#-api-sistema-de-ventas)
 
 </div>
