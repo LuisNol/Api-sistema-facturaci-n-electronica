@@ -1,61 +1,153 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Inicio rápido (comandos Laravel)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sigue estos pasos para poner en marcha la API en un entorno de desarrollo:
 
-## About Laravel
+1. Instalar dependencias:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+```bash
+composer install
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+2. Copiar y configurar variables de entorno:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+cp .env.example .env
+# Edita .env: ajustar DB_*, MAIL_*, JWT_*, y otros valores necesarios
+```
 
-## Learning Laravel
+3. Generar clave de aplicación y enlazar almacenamiento:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+php artisan key:generate
+php artisan storage:link
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+4. Ejecutar migraciones y seeders (desarrollo):
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php artisan migrate --seed
+```
 
-## Laravel Sponsors
+5. Crear un usuario de prueba (opción A: desde Tinker):
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+php artisan tinker
+>>> use App\\Models\\User;
+>>> User::create(['name' => 'Demo User', 'email' => 'demo.sum@gmail.com', 'password' => bcrypt('12345678')]);
+```
 
-### Premium Partners
+Nota: la cuenta de prueba (usar solo en desarrollo):
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+- Usuario: `demo.sum@gmail.com`
+- Contraseña: `12345678`
 
-## Contributing
+6. Iniciar servidor local:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan serve --host=127.0.0.1 --port=8000
+```
 
-## Code of Conduct
+Comandos útiles adicionales:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan migrate:refresh --seed   # reinicia BD y vuelve a sembrar
+php artisan queue:work               # procesa colas
+./vendor/bin/phpunit                # ejecutar pruebas
+```
 
-## Security Vulnerabilities
+## Capturas / Imágenes
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+He incluido referencias a las capturas en el README como placeholders. Para mostrarlas en el README coloca las imágenes en `docs/screenshots/` con estos nombres:
 
-## License
+- `docs/screenshots/dashboard.svg`
+- `docs/screenshots/product-list.svg`
+- `docs/screenshots/sale-list.svg`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Ejemplo de uso en Markdown:
+
+```markdown
+![Dashboard](docs/screenshots/dashboard.png)
+![Listado de Productos](docs/screenshots/product-list.png)
+![Listado de Ventas](docs/screenshots/sale-list.png)
+```
+
+Si quieres, puedo añadir las imágenes al repositorio por ti: súbelas al chat o indícame la ruta donde están, y las añadiré automáticamente.
+
+---
+
+# API Sistema de Ventas
+
+Descripción breve
+- Proyecto: API REST para el sistema de facturación y ventas.
+- Tecnología: Laravel (PHP) — backend para manejar clientes, productos, ventas, guías y notas electrónicas.
+
+**Requisitos**
+- PHP 8.1+ (o versión compatible)
+- Composer
+- MySQL / MariaDB (u otra BD soportada por Laravel)
+- Extensiones PHP habituales (OpenSSL, PDO, Mbstring, etc.)
+
+**Instalación (local)**
+1. Clona el repositorio:
+
+	git clone <repo-url> api-sistema-ventas
+	cd api-sistema-ventas
+
+2. Instala dependencias:
+
+	composer install
+
+3. Copia y configura el entorno:
+
+	cp .env.example .env
+	- Ajusta `DB_*`, `MAIL_*` y las variables necesarias (JWT, etc.).
+
+4. Genera la clave de la app:
+
+	php artisan key:generate
+
+5. Ejecuta migraciones y seeders (si aplica):
+
+	php artisan migrate --seed
+
+6. Inicia el servidor local:
+
+	php artisan serve --host=127.0.0.1 --port=8000
+
+**Configuración adicional**
+- Revisa `config/jwt.php` y `config/services.php` si usas JWT o integraciones externas.
+- Para almacenamiento de archivos, configura `FILESYSTEM_DRIVER` en `.env`.
+
+**Ejecutar pruebas**
+
+	./vendor/bin/phpunit
+
+**Rutas y endpoints**
+- Las rutas API principales están en [routes/api.php](routes/api.php).
+- Autenticación: Revisa los controladores en `app/Http/Controllers` (carpetas `Auth`, `User`, `Sale`, `Product`, etc.).
+
+**Estructura del proyecto (resumen)**
+- `app/Models` — modelos Eloquent (User, Company, Client, Product, Sale, etc.)
+- `app/Http/Controllers` — controladores API
+- `database/migrations` — migraciones de esquema
+- `database/seeders` — seeders para datos iniciales
+- `routes` — archivos de rutas (`api.php`, `web.php`)
+
+**Despliegue**
+- Configurar `.env` en servidor (DB, queue, cache, storage)
+- Ejecutar `composer install --no-dev`, `php artisan migrate --force`, y configurar `supervisor` para jobs/queues si es necesario.
+
+**Contribuir**
+- Abre un issue para discutir cambios grandes.
+- Crea PRs pequeñas y descriptivas.
+
+**Contacto**
+- Para dudas, deja un issue o contacta al responsable del proyecto.
+
+---
+
+Si quieres, puedo:
+- Añadir ejemplos de llamadas a la API (cURL / Postman) para endpoints comunes.
+- Traducir o ampliar secciones específicas.
+
+Indica qué prefieres y lo actualizo.
