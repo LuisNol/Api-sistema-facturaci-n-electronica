@@ -8,7 +8,7 @@
 [![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-[Características](#-características) • [Instalación](#-inicio-rápido) • [Demo en Vivo](#-demo-en-vivo) • [Capturas](#-capturas-de-pantalla)
+[Características](#características) • [Instalación](#instalación) • [Demo en Vivo](#demo-en-vivo) • [Capturas](#capturas-de-pantalla)
 
 </div>
 
@@ -16,77 +16,48 @@
 
 ## ✨ Características
 
-<table>
-<tr>
-<td width="50%">
-
-### 📊 Dashboard & Reportes
-- Métricas en tiempo real
-- Estadísticas detalladas
-- Gráficos interactivos
-
-### 🛍️ Gestión Comercial
-- Control integral de productos
-- Administración de inventario
-- Sistema de categorías
-
-</td>
-<td width="50%">
-
-### 💰 Ventas & Facturación
-- Facturación electrónica
-- Múltiples métodos de pago
-- Historial de transacciones
-
-### 🔐 Seguridad
-- Autenticación Laravel Sanctum
-- Control de usuarios (RBAC)
-- API RESTful documentada
-
-</td>
-</tr>
-</table>
+- 📊 Dashboard completo con métricas en tiempo real
+- 🛍️ Gestión integral de productos e inventario
+- 💰 Sistema de ventas y facturación electrónica
+- 👥 Control de usuarios y permisos (RBAC)
+- 📈 Reportes y estadísticas detalladas
+- 🔐 Autenticación segura con Laravel Sanctum
+- 📱 API RESTful documentada
 
 ---
 
 ## 🚀 Inicio Rápido
 
-### 📋 Requisitos Previos
-```bash
-PHP >= 8.1
-Composer
-MySQL/PostgreSQL
-Node.js y NPM
-```
+### Requisitos Previos
 
-### ⚙️ Instalación
+- PHP >= 8.1
+- Composer
+- MySQL/PostgreSQL
+- Node.js y NPM
 
-<details>
-<summary><b>📦 1. Instalar dependencias</b></summary>
+### Instalación
+
+Sigue estos pasos para configurar el proyecto en tu entorno local:
+
+#### 1️⃣ Instalar dependencias
 ```bash
 composer install
 ```
-</details>
 
-<details>
-<summary><b>🔧 2. Configurar variables de entorno</b></summary>
+#### 2️⃣ Configurar variables de entorno
 ```bash
 cp .env.example .env
 ```
-> Edita el archivo `.env` con tus credenciales de base de datos
 
-</details>
+Edita el archivo `.env` con tus credenciales de base de datos.
 
-<details>
-<summary><b>🔑 3. Generar clave de aplicación</b></summary>
+#### 3️⃣ Generar clave de aplicación
 ```bash
 php artisan key:generate
 php artisan storage:link
 ```
-</details>
 
-<details>
-<summary><b>🗄️ 4. Ejecutar migraciones y seeders</b></summary>
+#### 4️⃣ Ejecutar migraciones y seeders
 ```bash
 # Desarrollo (con datos de prueba)
 php artisan migrate --seed
@@ -94,16 +65,13 @@ php artisan migrate --seed
 # Solo el seeder de permisos
 php artisan db:seed --class=PermissionsDemoSeeder
 ```
-</details>
 
-<details>
-<summary><b>🚀 5. Iniciar servidor de desarrollo</b></summary>
+#### 5️⃣ Iniciar servidor de desarrollo
 ```bash
 php artisan serve
 ```
-> La API estará disponible en `http://localhost:8000`
 
-</details>
+La API estará disponible en `http://localhost:8000`
 
 ---
 
