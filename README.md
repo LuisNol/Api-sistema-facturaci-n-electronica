@@ -127,39 +127,18 @@ Contraseña: 12345678
 </p>
 
 ---
----
-## 📸 Pruebas Api
+## 📸 Pruebas Api 
 
-Aquí se muestran capturas de las pruebas de la API (Postman) y otras imágenes relacionadas.
-Coloca los archivos en `docs/screenshots/` con los nombres indicados abajo y se renderizarán automáticamente.
-
-### Pruebas API (Postman)
+### Panel de Control
 
 <p align="center">
-  <img src="docs/screenshots/login-apiapi-postman.jpeg" alt="Login API - Postman" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+  <img src="docs/screenshots/login-apiapi-postman.png" alt="Dashboard del Sistema" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
   <br/>
-  <em>🔐 Login API — Solicitud y respuesta en Postman</em>
+  <em>📊 Login- Mediante la API</em>
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/token_autoapi-postman.jpeg" alt="Token API - Postman" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-  <br/>
-  <em>🔑 Generación/renovación de token — Prueba en Postman</em>
-</p>
+<br/>
 
-<p align="center">
-  <img src="docs/screenshots/lis-product-api-postman.jpeg" alt="Listado Productos API - Postman" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-  <br/>
-  <em>📦 Listado de productos — Endpoint API (Postman)</em>
-</p>
-
-### Complemento (Frontend)
-
-<p align="center">
-  <img src="docs/screenshots/product-list.png" alt="Listado de Productos - Front" style="max-width:100%;width:900px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-  <br/>
-  <em>📦 Gestión de Productos — Interfaz Frontend</em>
-</p>
 
 ---
 
