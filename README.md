@@ -94,10 +94,9 @@ La API estará disponible en `http://localhost:8000`
 
 ### 🔑 Credenciales de Acceso
 ```yaml
-Email: demo.sum@gmail.com
+Email:demo.sum@gmail.com
 Contraseña: 12345678
 ```
-
 </div>
 
 ---
