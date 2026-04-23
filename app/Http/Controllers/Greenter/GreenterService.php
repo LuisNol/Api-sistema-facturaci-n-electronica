@@ -35,10 +35,12 @@ class GreenterService {
 
     public function getSee() {
         $see = new See();
-        $see->setCertificate(Storage::get('certificate-demo.pem'));
+        $certificateFile = env("APP_ENV") == "production" ? 'certificate.pem' : 'certificate-demo.pem';
+        $see->setCertificate(Storage::get($certificateFile));
         $see->setService(env("APP_ENV") == "local" ? SunatEndpoints::FE_BETA : SunatEndpoints::FE_PRODUCCION);
         $see->setClaveSOL(env("RUC"), env("USER_SOL"), env("USER_PASS"));
         return $see;
+
     }
 
     public function getCompany($company) {
@@ -428,7 +430,8 @@ class GreenterService {
             'cpe' => 'https://gre-test.nubefact.com/v1',]
         );
 
-        $certificate = Storage::get('certificate-demo.pem');
+        $certificateFile = env("APP_ENV") == "production" ? 'certificate.pem' : 'certificate-demo.pem';
+        $certificate = Storage::get($certificateFile);
         if (!$certificate) {
             throw new Exception('No se pudo cargar el certificado');
         }
