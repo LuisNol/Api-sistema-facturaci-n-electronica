@@ -31,16 +31,30 @@ use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\FormaPagos\FormaPagoCredito;
 
 class GreenterService {
+    private function getCertificateContent(): string
+    {
+        $certificateFile = env("APP_ENV") == "production" ? 'certificate.pem' : 'certificate-demo.pem';
+        $certificatePath = public_path($certificateFile);
 
+        if (!file_exists($certificatePath)) {
+            throw new Exception('No se encontró el archivo del certificado: ' . $certificateFile);
+        }
+
+        $certificate = file_get_contents($certificatePath);
+
+        if ($certificate === false || $certificate === '') {
+            throw new Exception('No se pudo leer el certificado: ' . $certificateFile);
+        }
+
+        return $certificate;
+    }
 
     public function getSee() {
         $see = new See();
-        $certificateFile = env("APP_ENV") == "production" ? 'certificate.pem' : 'certificate-demo.pem';
-        $see->setCertificate(Storage::get($certificateFile));
+        $see->setCertificate($this->getCertificateContent());
         $see->setService(env("APP_ENV") == "local" ? SunatEndpoints::FE_BETA : SunatEndpoints::FE_PRODUCCION);
         $see->setClaveSOL(env("RUC"), env("USER_SOL"), env("USER_PASS"));
         return $see;
-
     }
 
     public function getCompany($company) {
@@ -64,7 +78,9 @@ class GreenterService {
     }
 
     public function getClient($sale){
-        $cod_document = 1;$client = $sale->client;
+        $cod_document = 1;
+        $client = $sale->client;
+
         switch ($client->type_document) {
             case 'RUC':
                 $cod_document = 6;
@@ -76,6 +92,7 @@ class GreenterService {
                 $cod_document = 7;
                 break;
         }
+
         if($sale->is_exportacion == 1){
             return (new Client())
                 ->setTipoDoc(0)
@@ -430,8 +447,7 @@ class GreenterService {
             'cpe' => 'https://gre-test.nubefact.com/v1',]
         );
 
-        $certificateFile = env("APP_ENV") == "production" ? 'certificate.pem' : 'certificate-demo.pem';
-        $certificate = Storage::get($certificateFile);
+        $certificate = $this->getCertificateContent();
         if (!$certificate) {
             throw new Exception('No se pudo cargar el certificado');
         }
