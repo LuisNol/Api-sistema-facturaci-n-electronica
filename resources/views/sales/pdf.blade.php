@@ -417,8 +417,8 @@
                 @endif
             </td>
             <td class="company-cell">
-                <p class="company-name">{{ $companyName }}</p>
                 <p class="company-trade">{{ $companyTradeName }}</p>
+                <p class="company-name">{{ $companyName }}</p>
                 <p class="company-line">{{ $companyAddress }}</p>
                 <p class="company-line">{{ $companyLocation }}</p>
                 <p class="company-line">RUC: {{ $companyRuc }}</p>
