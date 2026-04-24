@@ -396,7 +396,7 @@
     ]);
 
     $qrImageBase64 = null;
-    $qrPreviewText = substr(str_replace('|', '', $qrPayload), 0, 36) . '=';
+    $qrPreviewText = base64_encode(sha1($qrPayload, true));
     try {
         $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' . rawurlencode($qrPayload);
         $qrContent = @file_get_contents($qrUrl);
@@ -511,7 +511,7 @@
             <td class="left-notes">
                 <p class="note"><strong>IMPORTE EN LETRAS:</strong> {{ $totalInLetters }}</p>
                 <p class="note">Representacion impresa de la {{ $documentType }}</p>
-                <p class="note">Descargue XML desde: <span class="note-link">{{ env('APP_URL') }}</span></p>
+                <p class="note">Descargue XML desde: <span class="note-link">https://xml.virtualfactperu.com</span></p>
                 <div class="qr-wrap">
                     <table class="qr-table">
                         <tr>
@@ -528,7 +528,7 @@
                         </tr>
                     </table>
                 </div>
-                <p class="note">{{ $sale->description ?: 'SIN OBSERVACIONES' }}</p>
+                <p class="note">{{ $sale->description ?: '' }}</p>
             </td>
             <td class="right-totals">
                 <table class="totals">
