@@ -71,4 +71,5 @@ Route::group([
 
 Route::get("electronic-note-pdf/{n_operacion}",[FacturacionElectronicaController::class,"pdf"]);
 Route::get("sales-pdf/{id}",[SaleController::class,"pdf"]);
+Route::get("sales-print/{id}",[SaleController::class,"print"]);
 Route::get("guia-remision-pdf/{id}",[GuiaRemisionController::class,"pdf"]);

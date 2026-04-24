@@ -93,6 +93,26 @@ class SaleController extends Controller
         ]);
     }
 
+    public function print($id)
+    {
+        $sale = Sale::with([
+            'client',
+            'user',
+            'user.role',
+            'sale_details.product.categorie',
+            'payments',
+        ])->find($id);
+
+        if(!$sale){
+            return abort(404);
+        }
+
+        return view('sales.print', [
+            'sale' => $sale,
+            'pdfUrl' => url('api/sales-pdf/'.$id),
+        ]);
+    }
+
     public function search_sale($comprobante){
         $sale = Sale::where("id",$comprobante)->first();
         $sale_ope = Sale::where("n_operacion",$comprobante)->first();
