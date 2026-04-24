@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sale;
 
 use App\Models\Sale\Sale;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use App\Models\Client\Client;
 use App\Models\Product\Product;
@@ -69,12 +70,21 @@ class SaleController extends Controller
     }
 
     public function pdf($id){
-        $sale = Sale::find($id);
+        $sale = Sale::with([
+            'client',
+            'user',
+            'user.role',
+            'sale_details.product.categorie',
+            'payments',
+        ])->find($id);
+
         if(!$sale){
             return abort(404);
         }
-        
-        $pdf = Pdf::loadView('pdf_sale', compact('sale'));
+
+        $company = Company::first();
+
+        $pdf = Pdf::loadView('sales.pdf', compact('sale', 'company'));
         
         return $pdf->stream('sale_'.$id.'.pdf', [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
