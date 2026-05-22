@@ -58,9 +58,34 @@ class GreenterService {
         $see = new See();
         $see->setCertificate($this->getCertificateContent());
         $see->setService(env("APP_ENV") == "local" ? SunatEndpoints::FE_BETA : SunatEndpoints::FE_PRODUCCION);
-        //$see->setClaveSOL(env("RUC"), env("USER_SOL"), env("USER_PASS"));
-        $see->setClaveSOL(env("RUC_P"), env("USER_SOL_P"),env("USER_PASS_P")
-);  
+        
+        // Seleccionar credenciales según ambiente
+        // Local: RUC_P (desarrollo/pruebas)
+        // Production: RUC (producción real)
+        $isLocal = env("APP_ENV") === "local";
+        
+        if ($isLocal) {
+            $ruc = env("RUC_P") ?? env("RUC");
+            $user = env("USER_SOL_P") ?? env("USER_SOL");
+            $pass = env("USER_PASS_P") ?? env("USER_PASS");
+        } else {
+            $ruc = env("RUC");
+            $user = env("USER_SOL");
+            $pass = env("USER_PASS");
+        }
+        
+        // Validar que los valores existan con mensajes específicos
+        if (!$ruc) {
+            throw new Exception('RUC no configurado: Falta RUC_P para local o RUC para producción en .env');
+        }
+        if (!$user) {
+            throw new Exception('USER_SOL no configurado: Falta USER_SOL_P para local o USER_SOL para producción en .env');
+        }
+        if (!$pass) {
+            throw new Exception('USER_PASS no configurado: Falta USER_PASS_P para local o USER_PASS para producción en .env');
+        }
+        
+        $see->setClaveSOL((string)$ruc, (string)$user, (string)$pass);
         return $see;
     }
 
