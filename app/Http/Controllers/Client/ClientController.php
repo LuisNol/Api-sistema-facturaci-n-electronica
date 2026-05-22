@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Client\ClientResource;
 use App\Http\Resources\Client\ClientCollection;
+use App\Services\ApiPeruService;
 
 class ClientController extends Controller
 {
@@ -113,5 +114,79 @@ class ClientController extends Controller
             "code" => 200,
             "message" => "El cliente se ha eliminado correctamente"
         ]);
+    }
+
+    /**
+     * Consultar datos de un DNI
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function consultarDni(Request $request)
+    {
+        try {
+            $request->validate([
+                'dni' => 'required|string|size:8|regex:/^\d+$/'
+            ], [
+                'dni.required' => 'El DNI es obligatorio',
+                'dni.size' => 'El DNI debe tener exactamente 8 dígitos',
+                'dni.regex' => 'El DNI debe contener solo números'
+            ]);
+
+            $apiPeru = new ApiPeruService();
+            $result = $apiPeru->consultarDni($request->dni);
+
+            return response()->json($result, $result['code']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Errores de validación',
+                'code' => 422,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar la consulta: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    /**
+     * Consultar datos de un RUC
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function consultarRuc(Request $request)
+    {
+        try {
+            $request->validate([
+                'ruc' => 'required|string|size:11|regex:/^\d+$/'
+            ], [
+                'ruc.required' => 'El RUC es obligatorio',
+                'ruc.size' => 'El RUC debe tener exactamente 11 dígitos',
+                'ruc.regex' => 'El RUC debe contener solo números'
+            ]);
+
+            $apiPeru = new ApiPeruService();
+            $result = $apiPeru->consultarRuc($request->ruc);
+
+            return response()->json($result, $result['code']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Errores de validación',
+                'code' => 422,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar la consulta: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
     }
 }

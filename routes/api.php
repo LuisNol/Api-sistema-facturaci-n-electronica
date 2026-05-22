@@ -43,6 +43,8 @@ Route::group([
     Route::resource("products",ProductController::class);
 
     Route::resource("clients",ClientController::class);
+    Route::post("clients/consultar-dni",[ClientController::class,"consultarDni"]);
+    Route::post("clients/consultar-ruc",[ClientController::class,"consultarRuc"]);
   //hola
     Route::get("sales/search_sale/{comprobante}",[SaleController::class,"search_sale"]);
     Route::get("sales/config",[SaleController::class,"config"]);
