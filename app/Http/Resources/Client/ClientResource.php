@@ -15,6 +15,14 @@ class ClientResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $birthDate = $this->resource->birth_date
+            ? Carbon::parse($this->resource->birth_date)->format("Y-m-d")
+            : null;
+
+        $createdAt = $this->resource->created_at
+            ? $this->resource->created_at->format("Y-m-d h:i A")
+            : null;
+
         return [
             "id" => $this->resource->id,
             "name"  => $this->resource->name,
@@ -25,10 +33,12 @@ class ClientResource extends JsonResource
             "type_client"  => $this->resource->type_client,
             "type_document"  => $this->resource->type_document,
             "n_document"  => $this->resource->n_document,
-            "birth_date"  => Carbon::parse($this->resource->birth_date)->format("Y-m-d"),
+            "birth_date"  => $birthDate,
             "user_id"  => $this->resource->user_id,
             "user" => [
-                "full_name" => $this->resource->user->name.' '.$this->resource->user->surname,
+                "full_name" => $this->resource->user
+                    ? trim($this->resource->user->name.' '.$this->resource->user->surname)
+                    : null,
             ],
             "state"  => $this->resource->state,
             "gender"  => $this->resource->gender,
@@ -39,7 +49,7 @@ class ClientResource extends JsonResource
             "provincia"  => $this->resource->provincia,
             "distrito"  => $this->resource->distrito,
             "address" => $this->resource->address,
-            "created_at" => $this->resource->created_at->format("Y-m-d h:i A")
+            "created_at" => $createdAt
         ];
     }
 }
