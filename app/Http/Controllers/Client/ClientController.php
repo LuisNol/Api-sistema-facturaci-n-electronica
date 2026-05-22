@@ -18,9 +18,9 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         // "/users?search=jose"
-        $search = $request->get("search");
-        $clients = Client::where(DB::raw("CONCAT(clients.full_name,' ',IFNULL(clients.phone,''),' ',
-                            clients.email,' ',IFNULL(clients.n_document,''))"),"like","%".$search."%")
+        $search = $request->get("search", "");
+        $clients = Client::where(DB::raw("CONCAT(IFNULL(clients.full_name,''),' ',IFNULL(clients.phone,''),' ',
+                            IFNULL(clients.email,''),' ',IFNULL(clients.n_document,''))"),"like","%".$search."%")
                     ->orderBy("id","desc")->paginate(25);
         return response()->json([
             "total" => $clients->total(),
