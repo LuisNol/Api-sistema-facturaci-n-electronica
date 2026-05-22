@@ -31,6 +31,11 @@ use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\FormaPagos\FormaPagoCredito;
 
 class GreenterService {
+    private function getUblVersion(): string
+    {
+        return '2.1';
+    }
+
     private function getCertificateContent(): string
     {
         $certificateFile = env("APP_ENV") == "production" ? 'certificate.pem' : 'certificate-demo.pem';
@@ -53,7 +58,9 @@ class GreenterService {
         $see = new See();
         $see->setCertificate($this->getCertificateContent());
         $see->setService(env("APP_ENV") == "local" ? SunatEndpoints::FE_BETA : SunatEndpoints::FE_PRODUCCION);
-        $see->setClaveSOL(env("RUC"), env("USER_SOL"), env("USER_PASS"));
+        //$see->setClaveSOL(env("RUC"), env("USER_SOL"), env("USER_PASS"));
+        $see->setClaveSOL(env("RUC_P"), env("USER_SOL_P"),env("USER_PASS_P")
+);  
         return $see;
     }
 
@@ -109,7 +116,7 @@ class GreenterService {
     public function getInvoice($data,$company,$sale) {
         
         $invoice = (new Invoice())
-            ->setUblVersion('2.1')
+            ->setUblVersion($this->getUblVersion())
             ->setTipoOperacion($data["tipo_operacion"]) // Venta - Catalog. 51
             ->setTipoDoc($data['tipo_doc']) // Factura - Catalog. 01 
             ->setSerie($data['serie'])
@@ -371,7 +378,7 @@ class GreenterService {
 
     public function getNota($data,$company,$nota_electronic) {
         $invoice = (new Note())
-                    ->setUblVersion('2.1')
+                    ->setUblVersion($this->getUblVersion())
                     ->setTipoDoc($data['tipo_doc']) // 07: Nota de Crédito / 08: Nota de Débito - Catalog. 01 
                     ->setSerie($data['serie'])
                     ->setCorrelativo($data['correlativo'])
